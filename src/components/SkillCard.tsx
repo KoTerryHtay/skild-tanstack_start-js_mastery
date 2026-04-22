@@ -7,6 +7,7 @@ import {
 	Copy,
 	MessageSquare,
 } from "lucide-react";
+import { usePostHog } from "posthog-js/react";
 import { useState } from "react";
 
 export default function SkillCard({
@@ -20,6 +21,8 @@ export default function SkillCard({
 }: SkillRecord) {
 	const [copied, setCopied] = useState(false);
 
+	const posthog = usePostHog();
+
 	const handleCopy = () => {
 		try {
 			navigator.clipboard.writeText(installCommand);
@@ -27,6 +30,12 @@ export default function SkillCard({
 			setTimeout(() => {
 				setCopied(false);
 			}, 2000);
+
+			posthog.capture("install_command_copied", {
+				skill_title: title,
+				skill_category: category,
+				install_command: installCommand,
+			});
 		} catch {
 			setCopied(false);
 		}
@@ -108,7 +117,17 @@ export default function SkillCard({
 					</div>
 
 					<div className="actions">
-						<Link to="/skills" className="open" title={`Open ${title}`}>
+						<Link
+							to="/skills"
+							className="open"
+							title={`Open ${title}`}
+							onClick={() =>
+								posthog.capture("skill_opened", {
+									skill_title: title,
+									skill_category: category,
+								})
+							}
+						>
 							<span>Open</span>
 							<ArrowUpRight size={14} />
 						</Link>
